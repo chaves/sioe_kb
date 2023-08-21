@@ -12,7 +12,8 @@
 		"prisma:migrate:dev": "dotenv -e .env.local -- prisma migrate dev",
 		"prisma:migrate:prod": "dotenv -e .env.local -- prisma migrate deploy",
 		"prisma:seed": "node prisma/seed/index.js",
-		"prisma:docs": "prisma-docs-generator serve"
+		"prisma:docs": "prisma-docs-generator serve",
+		"postinstall": "prisma generate"
 	},
 	"devDependencies": {
 		"@mermaid-js/mermaid-cli": "^10.3.1",
