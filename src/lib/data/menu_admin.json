@@ -1,0 +1,16 @@
+[
+    {
+        "title": "Home",
+        "path": "/"
+    },
+    {
+        "title": "Profile",
+        "path": "/profile"
+    },
+
+    {
+        "title": "Knowledge Base",
+        "path": "/kb"
+    }
+
+]

@@ -1,0 +1,529 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["auth", "public", "storage"]
+}
+
+generator docs {
+  provider = "node node_modules/prisma-docs-generator"
+}
+
+generator zod {
+  provider = "zod-prisma"
+  output   = "./zod" // (default) the directory where generated zod schemas will be saved
+
+  relationModel = true // (default) Create and export both plain and related models.
+  // relationModel         = "default" // Do not export model without relations.
+  // relationModel         = false // Do not generate related model
+
+  modelCase = "PascalCase" // (default) Output models using pascal case (ex. UserModel, PostModel)
+  // modelCase             = "camelCase" // Output models using camel case (ex. userModel, postModel)
+
+  modelSuffix = "Model" // (default) Suffix to apply to your prisma models when naming Zod schemas
+
+  // useDecimalJs          = false // (default) represent the prisma Decimal type using as a JS number
+  useDecimalJs = true // represent the prisma Decimal type using Decimal.js (as Prisma does)
+
+  imports = null // (default) will import the referenced file in generated schemas to be used via imports.someExportedVariable
+
+  // https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-by-null-values
+  prismaJsonNullability = true // (default) uses prisma's scheme for JSON field nullability
+  // prismaJsonNullability = false // allows null assignment to optional JSON fields
+}
+
+
+// Supabase Generated
+
+model users {
+  instance_id                 String?          @db.Uuid
+  id                          String           @id @db.Uuid
+  aud                         String?          @db.VarChar(255)
+  role                        String?          @db.VarChar(255)
+  email                       String?          @db.VarChar(255)
+  encrypted_password          String?          @db.VarChar(255)
+  email_confirmed_at          DateTime?        @db.Timestamptz(6)
+  invited_at                  DateTime?        @db.Timestamptz(6)
+  confirmation_token          String?          @db.VarChar(255)
+  confirmation_sent_at        DateTime?        @db.Timestamptz(6)
+  recovery_token              String?          @db.VarChar(255)
+  recovery_sent_at            DateTime?        @db.Timestamptz(6)
+  email_change_token_new      String?          @db.VarChar(255)
+  email_change                String?          @db.VarChar(255)
+  email_change_sent_at        DateTime?        @db.Timestamptz(6)
+  last_sign_in_at             DateTime?        @db.Timestamptz(6)
+  raw_app_meta_data           Json?
+  raw_user_meta_data          Json?
+  is_super_admin              Boolean?
+  created_at                  DateTime?        @db.Timestamptz(6)
+  updated_at                  DateTime?        @db.Timestamptz(6)
+  phone                       String?          @unique
+  phone_confirmed_at          DateTime?        @db.Timestamptz(6)
+  phone_change                String?          @default("")
+  phone_change_token          String?          @default("") @db.VarChar(255)
+  phone_change_sent_at        DateTime?        @db.Timestamptz(6)
+  confirmed_at                DateTime?        @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
+  email_change_token_current  String?          @default("") @db.VarChar(255)
+  email_change_confirm_status Int?             @default(0) @db.SmallInt
+  banned_until                DateTime?        @db.Timestamptz(6)
+  reauthentication_token      String?          @default("") @db.VarChar(255)
+  reauthentication_sent_at    DateTime?        @db.Timestamptz(6)
+  is_sso_user                 Boolean          @default(false)
+  deleted_at                  DateTime?        @db.Timestamptz(6)
+  identities                  identities[]
+  mfa_factors                 mfa_factors[]
+  sessions                    sessions[]
+  Profile                     Profile[]
+  Document                    Document[]
+  CallSubmission              CallSubmission[]
+  Membership                  Membership[]
+  Payment                     Payment[]
+  Registration                Registration[]
+  Reviewers                   Reviewer[]
+
+  @@index([instance_id])
+  @@schema("auth")
+}
+
+model audit_log_entries {
+  instance_id String?   @db.Uuid
+  id          String    @id @db.Uuid
+  payload     Json?     @db.Json
+  created_at  DateTime? @db.Timestamptz(6)
+  ip_address  String    @default("") @db.VarChar(64)
+
+  @@index([instance_id], map: "audit_logs_instance_id_idx")
+  @@schema("auth")
+}
+
+model flow_state {
+  id                     String                @id @db.Uuid
+  user_id                String?               @db.Uuid
+  auth_code              String
+  code_challenge_method  code_challenge_method
+  code_challenge         String
+  provider_type          String
+  provider_access_token  String?
+  provider_refresh_token String?
+  created_at             DateTime?             @db.Timestamptz(6)
+  updated_at             DateTime?             @db.Timestamptz(6)
+
+  @@index([auth_code], map: "idx_auth_code")
+  @@schema("auth")
+}
+
+model identities {
+  id              String
+  user_id         String    @db.Uuid
+  identity_data   Json
+  provider        String
+  last_sign_in_at DateTime? @db.Timestamptz(6)
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  email           String?   @default(dbgenerated("lower((identity_data ->> 'email'::text))"))
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([provider, id])
+  @@index([email])
+  @@index([user_id])
+  @@schema("auth")
+}
+
+model instances {
+  id              String    @id @db.Uuid
+  uuid            String?   @db.Uuid
+  raw_base_config String?
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+
+  @@schema("auth")
+}
+
+model mfa_amr_claims {
+  session_id            String   @db.Uuid
+  created_at            DateTime @db.Timestamptz(6)
+  updated_at            DateTime @db.Timestamptz(6)
+  authentication_method String
+  id                    String   @id(map: "amr_id_pk") @db.Uuid
+  sessions              sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([session_id, authentication_method], map: "mfa_amr_claims_session_id_authentication_method_pkey")
+  @@schema("auth")
+}
+
+model mfa_challenges {
+  id          String      @id @db.Uuid
+  factor_id   String      @db.Uuid
+  created_at  DateTime    @db.Timestamptz(6)
+  verified_at DateTime?   @db.Timestamptz(6)
+  ip_address  String      @db.Inet
+  mfa_factors mfa_factors @relation(fields: [factor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "mfa_challenges_auth_factor_id_fkey")
+
+  @@schema("auth")
+}
+
+model mfa_factors {
+  id             String           @id @db.Uuid
+  user_id        String           @db.Uuid
+  friendly_name  String?
+  factor_type    factor_type
+  status         factor_status
+  created_at     DateTime         @db.Timestamptz(6)
+  updated_at     DateTime         @db.Timestamptz(6)
+  secret         String?
+  mfa_challenges mfa_challenges[]
+  users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, created_at], map: "factor_id_created_at_idx")
+  @@schema("auth")
+}
+
+model refresh_tokens {
+  instance_id String?   @db.Uuid
+  id          BigInt    @id @default(autoincrement())
+  token       String?   @unique(map: "refresh_tokens_token_unique") @db.VarChar(255)
+  user_id     String?   @db.VarChar(255)
+  revoked     Boolean?
+  created_at  DateTime? @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+  parent      String?   @db.VarChar(255)
+  session_id  String?   @db.Uuid
+  sessions    sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([instance_id])
+  @@index([instance_id, user_id])
+  @@index([parent])
+  @@index([session_id, revoked])
+  @@index([token])
+  @@schema("auth")
+}
+
+model saml_providers {
+  id                String        @id @db.Uuid
+  sso_provider_id   String        @db.Uuid
+  entity_id         String        @unique
+  metadata_xml      String
+  metadata_url      String?
+  attribute_mapping Json?
+  created_at        DateTime?     @db.Timestamptz(6)
+  updated_at        DateTime?     @db.Timestamptz(6)
+  sso_providers     sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+model saml_relay_states {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  request_id      String
+  for_email       String?
+  redirect_to     String?
+  from_ip_address String?       @db.Inet
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([for_email])
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+model schema_migrations {
+  version String @unique(map: "schema_migrations_version_idx") @db.VarChar(14)
+
+  @@schema("auth")
+}
+
+model sessions {
+  id             String           @id @db.Uuid
+  user_id        String           @db.Uuid
+  created_at     DateTime?        @db.Timestamptz(6)
+  updated_at     DateTime?        @db.Timestamptz(6)
+  factor_id      String?          @db.Uuid
+  aal            aal_level?
+  not_after      DateTime?        @db.Timestamptz(6)
+  mfa_amr_claims mfa_amr_claims[]
+  refresh_tokens refresh_tokens[]
+  users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id])
+  @@index([user_id, created_at], map: "user_id_created_at_idx")
+  @@schema("auth")
+}
+
+model sso_domains {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  domain          String
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+model sso_providers {
+  id                String              @id @db.Uuid
+  resource_id       String?
+  created_at        DateTime?           @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  saml_providers    saml_providers[]
+  saml_relay_states saml_relay_states[]
+  sso_domains       sso_domains[]
+
+  @@schema("auth")
+}
+
+enum aal_level {
+  aal1
+  aal2
+  aal3
+
+  @@schema("auth")
+}
+
+enum code_challenge_method {
+  s256
+  plain
+
+  @@schema("auth")
+}
+
+enum factor_status {
+  unverified
+  verified
+
+  @@schema("auth")
+}
+
+enum factor_type {
+  totp
+  webauthn
+
+  @@schema("auth")
+}
+
+// Custum
+
+model Profile {
+  id                Int      @id @default(autoincrement())
+  user_id           String   @db.Uuid
+  user              users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role              Role     @default(USER)
+  email             String   @unique
+  first_name        String   @default("") @db.VarChar(255)
+  last_name         String   @default("") @db.VarChar(255)
+  university        String   @default("") @db.VarChar(255)
+  picture           String   @default("") @db.VarChar(255)
+  badge_name        String   @default("") @db.VarChar(255)
+  badge_affiliation String   @default("") @db.VarChar(255)
+  special_food      String   @default("") @db.VarChar(255)
+  special_other     String   @default("") @db.VarChar(255)
+  homepage          String   @default("") @db.VarChar(255)
+  photo             String   @default("") @db.VarChar(255)
+  bio               String   @default("") @db.Text()
+  publications      String   @default("") @db.Text()
+  country           Country? @relation(fields: [country_code], references: [code])
+  country_code      String?  @db.VarChar(6)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([role, last_name])
+  @@map("profiles")
+  @@schema("public")
+}
+
+model CallDiscipline {
+  id               Int              @id @default(autoincrement())
+  name             String           @db.VarChar(255)
+  order            Int              @default(0)
+  call_submissions CallSubmission[]
+
+  @@map("call_disciplines")
+  @@schema("public")
+}
+
+model CallTopic {
+  id               Int              @id @default(autoincrement())
+  name             String           @db.VarChar(255)
+  order            Int              @default(0)
+  call_submissions CallSubmission[]
+
+  @@map("call_topics")
+  @@schema("public")
+}
+
+model CallSubmission {
+  id                 Int             @id @default(autoincrement())
+  user               users           @relation(fields: [user_id], references: [id])
+  user_id            String          @db.Uuid
+  title              String          @db.VarChar(255)
+  abstract           String          @db.Text()
+  discipline         CallDiscipline? @relation(fields: [call_discipline_id], references: [id])
+  call_discipline_id Int             @default(0)
+  topic              CallTopic?      @relation(fields: [call_topic_id], references: [id])
+  call_topic_id      Int             @default(0)
+  accepted           Boolean         @default(false)
+  notified           Boolean         @default(false)
+  canceled           Boolean         @default(false)
+  publish            Boolean         @default(true)
+  comment            String?         @default("") @db.Text()
+  notes              String?         @default("") @db.Text()
+  CallAuthor         CallAuthor[]
+  CallFile           CallFile[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([user_id])
+  @@map("call_submissions")
+  @@schema("public")
+}
+
+model CallAuthor {
+  id         Int     @id @default(autoincrement())
+  first_name String  @db.VarChar(255)
+  last_name  String  @db.VarChar(255)
+  university String  @db.VarChar(255)
+  presenter  Boolean @default(false)
+  order      String
+
+  call_submission    CallSubmission @relation(fields: [call_submission_id], references: [id], onDelete: Cascade)
+  call_submission_id Int
+
+  @@index([call_submission_id])
+  @@map("call_authors")
+  @@schema("public")
+}
+
+model CallFile {
+  id                 Int            @id @default(autoincrement())
+  call_submission    CallSubmission @relation(fields: [call_submission_id], references: [id], onDelete: Cascade)
+  call_submission_id Int
+  file_name          String         @db.VarChar(255)
+  file_size          Int
+
+  @@index([call_submission_id])
+  @@map("call_files")
+  @@schema("public")
+}
+
+model Reviewer {
+  id      Int     @id @default(autoincrement())
+  user    users   @relation(fields: [user_id], references: [id])
+  user_id String  @db.Uuid
+  pc      Boolean @default(false)
+
+  @@map("reviewers")
+  @@schema("public")
+}
+
+model Document {
+  id          Int    @id @default(autoincrement())
+  user        users  @relation(fields: [user_id], references: [id])
+  user_id     String @db.Uuid
+  title       String @db.VarChar(255)
+  description String @db.Text
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([user_id])
+  @@map("documents")
+  @@schema("public")
+}
+
+model Registration {
+  id            Int      @id @default(autoincrement())
+  user          users    @relation(fields: [user_id], references: [id])
+  user_id       String   @db.Uuid
+  payment       Payment? @relation(fields: [payment_id], references: [id])
+  payment_id    Int?     @default(0)
+  year          Int
+  paid          Boolean  @default(false)
+  gala          Boolean  @default(false)
+  guest_name    String   @default("") @db.VarChar(255)
+  guest_dietary String   @default("") @db.VarChar(255)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([user_id, payment_id, year])
+  @@map("registrations")
+  @@schema("public")
+}
+
+model Membership {
+  id         Int            @id @default(autoincrement())
+  user       users          @relation(fields: [user_id], references: [id])
+  user_id    String         @db.Uuid
+  payment    Payment?       @relation(fields: [payment_id], references: [id])
+  payment_id Int?           @default(0)
+  year_start Int            @default(0)
+  year_end   Int            @default(0)
+  type       MembershipType
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([user_id, payment_id, year_start, year_end])
+  @@map("memberships")
+  @@schema("public")
+}
+
+model Payment {
+  id             Int    @id @default(autoincrement())
+  user           users  @relation(fields: [user_id], references: [id])
+  user_id        String @db.Uuid
+  payer_id       String
+  payer_email    String
+  amount         String
+  currency       String
+  payment_status String
+
+  membership   Membership[]
+  registration Registration[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([user_id])
+  @@map("payments")
+  @@schema("public")
+}
+
+model Country {
+  code String  @id @unique
+  name String
+  user Profile[]
+
+  @@map("countries")
+  @@schema("public")
+}
+
+enum Role {
+  ADMIN
+  BOARD
+  PC
+  USER
+
+  @@schema("public")
+}
+
+enum MembershipType {
+  Y
+  Y3
+
+  @@schema("public")
+}
