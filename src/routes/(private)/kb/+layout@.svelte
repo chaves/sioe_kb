@@ -129,24 +129,24 @@
 	<Sidebar asideClass="w-54">
 		<SidebarWrapper divClass="overflow-y-auto py-4 px-3 rounded dark:bg-gray-800">
 			<SidebarGroup>
-				<SidebarItem label="Home" href="/" on:click={toggleSide} active={activeUrl === `/`} />
+				<SidebarItem label="Knowledge Base" href="/" on:click={toggleSide} active={activeUrl === `/`} />
+				<SidebarDropdownWrapper label="Annual Conference">
 					<SidebarItem
-						label="dqfdqfq"
+						label="Call for Papers"
 						href="sdfdsf"
 						{spanClass}
 						activeClass="flex items-center p-2 text-base font-normal text-gray-900 bg-primary-200 dark:bg-primary-700 rounded-lg dark:text-white hover:bg-primary-100 dark:hover:bg-primary-700"
 						on:click={toggleSide}
 						active={false}
 					/>
-				<SidebarDropdownWrapper label="Articles">
 					<SidebarItem
-						label="dqfdqfq"
-						href="sdfdsf"
-						{spanClass}
-						activeClass="flex items-center p-2 text-base font-normal text-gray-900 bg-primary-200 dark:bg-primary-700 rounded-lg dark:text-white hover:bg-primary-100 dark:hover:bg-primary-700"
-						on:click={toggleSide}
-						active={false}
-					/>
+					label="Re"
+					href="sdfdsf"
+					{spanClass}
+					activeClass="flex items-center p-2 text-base font-normal text-gray-900 bg-primary-200 dark:bg-primary-700 rounded-lg dark:text-white hover:bg-primary-100 dark:hover:bg-primary-700"
+					on:click={toggleSide}
+					active={false}
+				/>
 				</SidebarDropdownWrapper>
 			</SidebarGroup>
 		</SidebarWrapper>
